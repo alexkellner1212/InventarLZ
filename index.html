@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inventar LZ Rothenditmold</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0c0e12;--surface:#14171e;--surface2:#1b1f28;--surface3:#222733;
+  --border:#2a3040;--border-light:#353d50;
+  --text:#e8eaf0;--text2:#9ca3b8;--text3:#636d84;
+  --accent:#3b82f6;--accent-dim:#1d4ed8;--accent-glow:rgba(59,130,246,.12);
+  --green:#22c55e;--green-dim:rgba(34,197,94,.12);
+  --amber:#f59e0b;--amber-dim:rgba(245,158,11,.12);
+  --red:#ef4444;--red-dim:rgba(239,68,68,.12);
+  --cyan:#06b6d4;--cyan-dim:rgba(6,182,212,.12);
+  --purple:#a78bfa;--purple-dim:rgba(167,139,250,.12);
+  --radius:10px;--radius-sm:6px;
+}
+html{font-size:14px}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+
+/* HEADER */
+.header{
+  background:linear-gradient(135deg,#111520 0%,#161b28 100%);
+  border-bottom:1px solid var(--border);
+  padding:20px 28px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+  position:sticky;top:0;z-index:100;backdrop-filter:blur(20px);
+}
+.header-left{display:flex;align-items:center;gap:14px}
+.logo-mark{
+  width:38px;height:38px;border-radius:8px;
+  background:linear-gradient(135deg,var(--accent) 0%,#6366f1 100%);
+  display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:#fff;
+  box-shadow:0 0 20px rgba(59,130,246,.25);
+}
+.header h1{font-size:1.15rem;font-weight:700;letter-spacing:-.02em}
+.header .subtitle{font-size:.78rem;color:var(--text3);margin-top:2px}
+.header-right{display:flex;align-items:center;gap:10px}
+.badge{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:5px 11px;border-radius:20px;font-size:.72rem;font-weight:500;
+  border:1px solid var(--border);background:var(--surface2);color:var(--text2);
+}
+.badge .dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green)}
+
+/* STATS ROW */
+.stats{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;
+  padding:16px 28px;
+}
+.stat-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:14px 16px;position:relative;overflow:hidden;transition:border-color .2s;
+}
+.stat-card:hover{border-color:var(--border-light)}
+.stat-card .label{font-size:.7rem;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;font-weight:500}
+.stat-card .value{font-size:1.6rem;font-weight:700;margin-top:4px;font-family:'JetBrains Mono',monospace}
+.stat-card .sub{font-size:.72rem;color:var(--text2);margin-top:2px}
+.stat-card::after{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:0;transition:opacity .3s;
+}
+.stat-card:hover::after{opacity:1}
+
+/* CONTROLS */
+.controls{
+  display:flex;align-items:center;gap:10px;padding:0 28px 12px;flex-wrap:wrap;
+}
+.search-box{
+  flex:1;min-width:220px;position:relative;
+}
+.search-box input{
+  width:100%;padding:9px 14px 9px 36px;border-radius:var(--radius);
+  border:1px solid var(--border);background:var(--surface);color:var(--text);
+  font-family:inherit;font-size:.85rem;outline:none;transition:border-color .2s;
+}
+.search-box input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+.search-box input::placeholder{color:var(--text3)}
+.search-box svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--text3);width:16px;height:16px}
+.filter-btn{
+  padding:8px 14px;border-radius:var(--radius-sm);border:1px solid var(--border);
+  background:var(--surface);color:var(--text2);font-family:inherit;font-size:.78rem;
+  cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px;font-weight:500;
+}
+.filter-btn:hover{border-color:var(--border-light);color:var(--text)}
+.filter-btn.active{background:var(--accent-glow);border-color:var(--accent);color:var(--accent)}
+.filter-count{
+  background:var(--accent);color:#fff;font-size:.65rem;padding:1px 6px;border-radius:10px;
+  font-weight:600;min-width:18px;text-align:center;
+}
+
+/* FILTER PANEL */
+.filter-panel{
+  display:none;padding:0 28px 14px;
+}
+.filter-panel.open{display:block}
+.filter-chips{display:flex;gap:6px;flex-wrap:wrap;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius)}
+.chip{
+  padding:5px 12px;border-radius:16px;font-size:.72rem;font-weight:500;
+  border:1px solid var(--border);background:var(--surface2);color:var(--text2);
+  cursor:pointer;transition:all .15s;white-space:nowrap;
+}
+.chip:hover{border-color:var(--border-light);color:var(--text)}
+.chip.active{background:var(--accent-glow);border-color:var(--accent);color:var(--accent)}
+.filter-section-title{font-size:.7rem;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;font-weight:500;margin:10px 0 6px}
+
+/* TABLE */
+.table-wrap{
+  padding:0 28px 28px;overflow-x:auto;
+}
+table{
+  width:100%;border-collapse:separate;border-spacing:0;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;
+}
+thead{position:sticky;top:68px;z-index:10}
+thead th{
+  background:var(--surface2);padding:10px 14px;text-align:left;
+  font-size:.7rem;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;
+  border-bottom:1px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none;
+  transition:color .15s;
+}
+thead th:hover{color:var(--text)}
+thead th .sort-icon{opacity:.3;margin-left:4px;font-size:.65rem}
+thead th.sorted .sort-icon{opacity:1;color:var(--accent)}
+tbody tr{transition:background .1s}
+tbody tr:hover{background:var(--surface2)}
+tbody td{
+  padding:10px 14px;border-bottom:1px solid var(--border);
+  font-size:.82rem;vertical-align:middle;
+}
+tbody tr:last-child td{border-bottom:none}
+.id-cell{font-family:'JetBrains Mono',monospace;font-weight:500;color:var(--text3);font-size:.78rem}
+.bezeichnung{max-width:340px;line-height:1.35}
+.kat-badge{
+  display:inline-block;padding:3px 9px;border-radius:12px;font-size:.7rem;font-weight:500;white-space:nowrap;
+}
+.abt-badge{
+  display:inline-block;padding:3px 9px;border-radius:12px;font-size:.7rem;font-weight:500;white-space:nowrap;
+}
+.status-dot{
+  display:inline-flex;align-items:center;gap:5px;font-size:.75rem;
+}
+.status-dot::before{
+  content:'';width:7px;height:7px;border-radius:50%;flex-shrink:0;
+}
+.status-dot.has::before{background:var(--green);box-shadow:0 0 6px var(--green)}
+.status-dot.missing::before{background:var(--red);opacity:.5}
+.status-dot.partial::before{background:var(--amber)}
+.foto-indicator{font-size:.75rem}
+
+.empty-state{
+  text-align:center;padding:60px 20px;color:var(--text3);
+}
+.empty-state .icon{font-size:2rem;margin-bottom:10px;opacity:.3}
+.empty-state p{font-size:.85rem}
+
+/* DETAIL MODAL */
+.modal-overlay{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;
+  justify-content:center;align-items:center;padding:20px;backdrop-filter:blur(4px);
+}
+.modal-overlay.open{display:flex}
+.modal{
+  background:var(--surface);border:1px solid var(--border);border-radius:14px;
+  width:100%;max-width:560px;max-height:85vh;overflow-y:auto;
+  box-shadow:0 25px 60px rgba(0,0,0,.5);
+}
+.modal-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 22px;border-bottom:1px solid var(--border);
+}
+.modal-header h2{font-size:1rem;font-weight:700}
+.modal-close{
+  width:30px;height:30px;border-radius:6px;border:1px solid var(--border);
+  background:var(--surface2);color:var(--text2);cursor:pointer;display:flex;
+  align-items:center;justify-content:center;font-size:1.1rem;transition:all .15s;
+}
+.modal-close:hover{background:var(--red-dim);border-color:var(--red);color:var(--red)}
+.modal-body{padding:18px 22px}
+.detail-row{
+  display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);
+}
+.detail-row:last-child{border-bottom:none}
+.detail-label{
+  flex-shrink:0;width:130px;font-size:.72rem;color:var(--text3);
+  text-transform:uppercase;letter-spacing:.04em;font-weight:500;padding-top:2px;
+}
+.detail-value{font-size:.85rem;color:var(--text);line-height:1.4;word-break:break-word}
+.detail-value.empty{color:var(--text3);font-style:italic}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--border-light)}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+  .header{padding:14px 16px}
+  .stats{padding:12px 16px;grid-template-columns:repeat(2,1fr)}
+  .controls{padding:0 16px 10px}
+  .table-wrap{padding:0 16px 16px}
+  .filter-panel{padding:0 16px 10px}
+  thead th{padding:8px 10px}
+  tbody td{padding:8px 10px}
+}
+
+/* EXPORT BTN */
+.export-btn{
+  padding:8px 14px;border-radius:var(--radius-sm);
+  border:1px solid var(--green);background:var(--green-dim);
+  color:var(--green);font-family:inherit;font-size:.78rem;
+  cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px;font-weight:500;
+}
+.export-btn:hover{background:rgba(34,197,94,.2)}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="logo-mark">LZ</div>
+    <div>
+      <h1>Inventarliste LZ Rothenditmold</h1>
+      <div class="subtitle">HANOMAG Aluminium Solutions &middot; Werk Baunatal</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <span class="badge"><span class="dot"></span> Stand 27.04.2026</span>
+  </div>
+</div>
+
+<div class="stats" id="stats"></div>
+
+<div class="controls">
+  <div class="search-box">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+    <input type="text" id="search" placeholder="Suche nach Bezeichnung, Kategorie, ID ...">
+  </div>
+  <button class="filter-btn" id="filterToggle" onclick="toggleFilter()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+    Filter
+  </button>
+  <button class="filter-btn" id="dataQualityBtn" onclick="toggleDataQuality()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg>
+    Datenlücken
+  </button>
+  <button class="export-btn" onclick="exportCSV()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    CSV
+  </button>
+</div>
+
+<div class="filter-panel" id="filterPanel">
+  <div class="filter-section-title">Abteilung</div>
+  <div class="filter-chips" id="abtFilters"></div>
+  <div class="filter-section-title" style="margin-top:8px">Kategorie (Top)</div>
+  <div class="filter-chips" id="katFilters"></div>
+</div>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th data-col="ID" class="sorted" onclick="sortBy('ID')">ID <span class="sort-icon">▲</span></th>
+        <th data-col="Bezeichnung" onclick="sortBy('Bezeichnung')">Bezeichnung <span class="sort-icon">▲</span></th>
+        <th data-col="Kategorie" onclick="sortBy('Kategorie')">Kategorie <span class="sort-icon">▲</span></th>
+        <th data-col="Abteilung" onclick="sortBy('Abteilung')">Abteilung <span class="sort-icon">▲</span></th>
+        <th>Foto</th>
+        <th>Eingelagert</th>
+        <th>Eigentum</th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</div>
+
+<div class="modal-overlay" id="modal" onclick="closeModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h2 id="modalTitle">Detail</h2>
+      <button class="modal-close" onclick="document.getElementById('modal').classList.remove('open')">&times;</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+const DATA = [{"ID":1,"Bezeichnung":"Diverse Rollenbahnelemente (2 Kurven & Geraden) - Rollbahn zur Montage Q7 GHA","Kategorie":"Transport","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_142811.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":2,"Bezeichnung":"4 Stück Pyramidenwagen (blau) - Originalverpackt","Kategorie":"Transport","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_142747.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":3,"Bezeichnung":"2 Stück Klopfmodell aus S-Grün - BMW Längsträger G31?","Kategorie":"Richten","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_142712.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":4,"Bezeichnung":"Diverse Kabelpritschen","Kategorie":"Kabelpritsche","Abteilung":"Instandhaltung","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_142800.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":5,"Bezeichnung":"8 Stück WBA-Gestelle","Kategorie":"Gestelle","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_143008.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":6,"Bezeichnung":"3 Stück Einschübe B9 Kammerofen","Kategorie":"Gestelle","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_143134.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":7,"Bezeichnung":"2 Stück Schutzzaun Elemente","Kategorie":"Schutzzaun","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_143139.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":8,"Bezeichnung":"Druckprüfanlage E-Motorengehäuse aus M45 - EQ210, EQ 270 und EQ271","Kategorie":"Anlage","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_143149.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":9,"Bezeichnung":"21 Stück WBH-Gestelle Statorgehäuse","Kategorie":"Gestelle","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_143310.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":10,"Bezeichnung":"Hecklängsträger BMW","Kategorie":"Schleppmessung","Abteilung":"Technik","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_143430.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":11,"Bezeichnung":"Diverse Rollenbahnelemente (10 Geraden) - Rollbahn zur Montage Q7 GHA","Kategorie":"Transport","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_143436.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":12,"Bezeichnung":"1 Stück Prüf- und Montageanlage Q7 GHA - Niet aus 2015","Kategorie":"Anlage","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_143442.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":13,"Bezeichnung":"2 Stück Prüf- und Montageanlage Q7 GHA - Helicoil aus 2015","Kategorie":"Anlage","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_143442.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":14,"Bezeichnung":"10 Stück - WBH-Gestell (Einsatz) Q7 GHA","Kategorie":"Gestelle","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_143525.jpg","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":15,"Bezeichnung":"1 Stück Prüftisch aus ITEM-Profilen, Anfahrschutzschienen L-Profil","Kategorie":"Diverses","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_143545.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":16,"Bezeichnung":"27 Stück Einschübe Motorgehäuse","Kategorie":"Gestelle","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_143608.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":17,"Bezeichnung":"40 Stück - WBH-Gestell (Einsatz) Q7 GHA","Kategorie":"Gestelle","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_143611.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":18,"Bezeichnung":"Diverse Versuchsteile - Ansprechpartner Hr. Schnarr & Hr. Seidel","Kategorie":"Schleppmessung","Abteilung":"Technik","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_143619.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":19,"Bezeichnung":"1 Stück BAZ-Vorrichtung Q7 FBA (Eigentum VW)","Kategorie":"Vorrichtung","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_143707.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":20,"Bezeichnung":"1 Stück BAZ-Vorrichtung","Kategorie":"Vorrichtung","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_143713.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":21,"Bezeichnung":"1 Stück BAZ-Vorrichtung","Kategorie":"Vorrichtung","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_143713.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":22,"Bezeichnung":"1 Stück BAZ-Vorrichtung","Kategorie":"Vorrichtung","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_143718.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":23,"Bezeichnung":"1 Stück BAZ-Vorrichtung Q7 GHA Rechts","Kategorie":"Vorrichtung","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_143721.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":24,"Bezeichnung":"1 Stück BAZ-Vorrichtung Q7 GHA Links","Kategorie":"Vorrichtung","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_143724.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":25,"Bezeichnung":"1 Stück schwarze Abdeckung","Kategorie":"Diverses","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_143727.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":26,"Bezeichnung":"1 Stück BAZ-Vorrichtung D1","Kategorie":"Vorrichtung","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_143730.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":27,"Bezeichnung":"1 Stück BAZ-Vorrichtung","Kategorie":"Vorrichtung","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_143733.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":28,"Bezeichnung":"Prozessluftventialator Nicolea / Gebhardt","Kategorie":"Ventilator","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_143737.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":29,"Bezeichnung":"1 Stück BAZ-Vorrichtung D1","Kategorie":"Vorrichtung","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_143742.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":30,"Bezeichnung":"1 Stück GHA und 3 Stück Stoßdämpferaufnahme als Schleppmessbauteil","Kategorie":"Schleppmessung","Abteilung":"Technik","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_143816.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":31,"Bezeichnung":"4 Stück - WBH-Gestell (Einsatz) Q7 GHA","Kategorie":"Gestelle","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_143816.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":32,"Bezeichnung":"6 Stück Pyramidenwagen (blau) - Original eingepackt","Kategorie":"Transport","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_143828.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":33,"Bezeichnung":"1 Stück BAZ-Vorrichtung","Kategorie":"Vorrichtung","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_143833.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":34,"Bezeichnung":"Adapterplatte","Kategorie":"Vorrichtung","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_143835.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":35,"Bezeichnung":"Adapterplatte","Kategorie":"Vorrichtung","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_143837.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":36,"Bezeichnung":"Adapterplatte","Kategorie":"Vorrichtung","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_143840.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":37,"Bezeichnung":"Adapterplatte plus Blechteile","Kategorie":"Vorrichtung","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_143842.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":38,"Bezeichnung":"1 Stück BAZ-Vorrichtung Q7 FBA (Eigentum VW)","Kategorie":"Vorrichtung","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_143851.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":39,"Bezeichnung":"1 Stück Nadelgerät zum Signieren","Kategorie":"Anlage","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_143911.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":40,"Bezeichnung":"1 Stück BAZ-Vorrichtung","Kategorie":"Vorrichtung","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_143918.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":41,"Bezeichnung":"1 Stück BAZ-Vorrichtung C7","Kategorie":"Vorrichtung","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_143922.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":42,"Bezeichnung":"1 Stück BAZ-Vorrichtung C7","Kategorie":"Vorrichtung","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_143928.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":43,"Bezeichnung":"4 Stück Zwischenablage C7 Portal","Kategorie":"Anlage","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_143930.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":44,"Bezeichnung":"2 Stück Uhr für Produktionshalle","Kategorie":"Uhr","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_143940.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":45,"Bezeichnung":"1 Stück BAZ-Vorrichtung","Kategorie":"Vorrichtung","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_143945.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":46,"Bezeichnung":"Q7 GHA","Kategorie":"Vorrichtung","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_143950.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":47,"Bezeichnung":"Handspannvorrichtung Q7 FBA Links","Kategorie":"Vorrichtung","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_144013.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":48,"Bezeichnung":"Adapterplatte","Kategorie":"Vorrichtung","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_144017.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":49,"Bezeichnung":"WBH-Chargiergestell zum Entnehmen der Einschübe","Kategorie":"Gestelle","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_144019.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":50,"Bezeichnung":"Diverse Rollenbahnelemente (2 Kurven) - Rollbahn zur Montage Q7 GHA","Kategorie":"Transport","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_144103.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":51,"Bezeichnung":"1 Stück BAZ-Vorrichtung Längsträger G61 Rechts","Kategorie":"Vorrichtung","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_144122.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":52,"Bezeichnung":"1 Stück BAZ-Vorrichtung Längsträger G61 Links","Kategorie":"Vorrichtung","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_144134.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":53,"Bezeichnung":"2 Stück Transportband T7 SHL (alt)","Kategorie":"Transport","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_144134.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":54,"Bezeichnung":"Transportbahn Q7 GHA von MBA zur Montage HC","Kategorie":"Transport","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_144146.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":55,"Bezeichnung":"???","Kategorie":"Bauteile","Abteilung":"","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_144149.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":56,"Bezeichnung":"Montagetisch Federbeinaufnahme","Kategorie":"Arbeitsplatz","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_144151.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":57,"Bezeichnung":"Stützen für Kabelpritschen","Kategorie":"Kabelpritsche","Abteilung":"Technik","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_144206.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":58,"Bezeichnung":"Transportboxen für Q7 GHA","Kategorie":"Transport","Abteilung":"Logistik","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_144210.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":59,"Bezeichnung":"2 Stück Brenner Noxmat für DLO 1","Kategorie":"Brenner","Abteilung":"Instandhaltung","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_144234.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":60,"Bezeichnung":"Box Chiron 310-10","Kategorie":"Bleche","Abteilung":"Instandhaltung","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_144245.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":61,"Bezeichnung":"Binar Hebehilfe (defekt)","Kategorie":"Hebehilfe","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_144253.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":62,"Bezeichnung":"Tisch","Kategorie":"Tisch","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_144256.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":63,"Bezeichnung":"1 Stück Pyramidenwagen (rot)","Kategorie":"Transport","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_144509.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":64,"Bezeichnung":"Clinch-Anlage zum Einpressen von Spec-Nuts","Kategorie":"Anlage","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_145121.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":65,"Bezeichnung":"Dichtprüfanlage ZK","Kategorie":"Anlage","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_144854.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":66,"Bezeichnung":"Absaugung Edelstahl (Putzen der Motorgehäuse)","Kategorie":"Anlage","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_145114.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":67,"Bezeichnung":"Creform Lagerregal","Kategorie":"Regal","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_145110.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":68,"Bezeichnung":"Chargiergestell","Kategorie":"Gestelle","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_145038.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":69,"Bezeichnung":"2 Stück Roboter aus C7 Carat-Zelle","Kategorie":"Roboter","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_144954.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":70,"Bezeichnung":"2 Stück Lüfter - Luftdusche DLO 1 (Fabrikat Zehner Ventilatoren)","Kategorie":"Luftdusche","Abteilung":"Technik","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_145017.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":71,"Bezeichnung":"Transportwagen mit Ablagen","Kategorie":"Transport","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_144518.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":72,"Bezeichnung":"Staubsauger (EX-geschützt)","Kategorie":"Staubsauger","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_144903.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":73,"Bezeichnung":"Federbeinaufnahme C7","Kategorie":"Vorrichtung","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_144858.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":74,"Bezeichnung":"Rüttler für die Zuführung der SpecNuts","Kategorie":"Anlage","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_144911.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":75,"Bezeichnung":"Paletten","Kategorie":"Transport","Abteilung":"Logistik","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_144520.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":76,"Bezeichnung":"Abblastisch","Kategorie":"Abblastisch","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_145009.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":77,"Bezeichnung":"Spänewagen","Kategorie":"Spänewagen","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_145134.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":78,"Bezeichnung":"Handpresse KS Huayu","Kategorie":"Anlage","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_145134.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":79,"Bezeichnung":"WBA-Gestell","Kategorie":"Gestelle","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_144524.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":80,"Bezeichnung":"Fräsmaschine aus Instandhaltung Fa. Knut","Kategorie":"Anlage","Abteilung":"Instandhaltung","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_145241.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":81,"Bezeichnung":"Ausblaskabine für D4 Verbindungsteil","Kategorie":"Ausblaskabine","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_145034.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":82,"Bezeichnung":"Bolzenschweißanlage für Handtmann Kleinteile (Fa. Discher)","Kategorie":"Maschine","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_145208.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":83,"Bezeichnung":"Signiergerät","Kategorie":"Signiergerät","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_144940.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":84,"Bezeichnung":"3 Stück Arbeitstische","Kategorie":"Tisch","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_145038.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":85,"Bezeichnung":"Rack für DLO 1","Kategorie":"Rack","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"#T:\\Technik\\Gebäudemanagement\\Kassel Rothenditmold (LZ)\\10_Fotos\\Logistikzentrum Stand 11.06.2025\\20250611_145110.jpg#","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"","veranlasst durch":""},{"ID":86,"Bezeichnung":"8 Stück Trapezwagen","Kategorie":"Transport","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"07.08.2025","veranlasst durch":"Daniel Jasiak"},{"ID":87,"Bezeichnung":"6 Stück Pufferwagen BJB","Kategorie":"Transport","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"07.08.2025","veranlasst durch":"Daniel Jasiak"},{"ID":88,"Bezeichnung":"6 Stück Aufbau Pufferwagen BJB","Kategorie":"Transport","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"07.08.2025","veranlasst durch":"Daniel Jasiak"},{"ID":89,"Bezeichnung":"1 Stück Richtlehre BJB","Kategorie":"Transport","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"07.08.2025","veranlasst durch":"Daniel Jasiak"},{"ID":90,"Bezeichnung":"3 Stück Arbeitstisch","Kategorie":"Arbeitsplatz","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"07.08.2025","veranlasst durch":"Daniel Jasiak"},{"ID":91,"Bezeichnung":"1 Stück Vorrichtung Lambo  links (alt)","Kategorie":"Vorrichtung","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"07.08.2025","veranlasst durch":"Daniel Jasiak"},{"ID":92,"Bezeichnung":"1 Stück Vorrichtung Lambo  rechts (alt)","Kategorie":"Vorrichtung","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"07.08.2025","veranlasst durch":"Daniel Jasiak"},{"ID":93,"Bezeichnung":"2 Stück Beizgestell GHA","Kategorie":"Gestelle","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"07.08.2025","veranlasst durch":"Daniel Jasiak"},{"ID":94,"Bezeichnung":"2 Stück Beizgestell Porsche","Kategorie":"Gestelle","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"07.08.2025","veranlasst durch":"Daniel Jasiak"},{"ID":95,"Bezeichnung":"2 Stück Beizgestell unbekannt","Kategorie":"Gestelle","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"07.08.2025","veranlasst durch":"Daniel Jasiak"},{"ID":96,"Bezeichnung":"1 Stück Kiste Robigreifer Q7","Kategorie":"Instandhaltung","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"07.08.2025","veranlasst durch":"Daniel Jasiak"},{"ID":97,"Bezeichnung":"1 Stück Klopfmodell G61 links","Kategorie":"Gestelle","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"07.08.2025","veranlasst durch":"Daniel Jasiak"},{"ID":98,"Bezeichnung":"1 Stück Klopfmodell G61 rechts","Kategorie":"Gestelle","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"07.08.2025","veranlasst durch":"Daniel Jasiak"},{"ID":99,"Bezeichnung":"3 Stück Alublock (Aerospace)","Kategorie":"Produktion","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"07.08.2025","veranlasst durch":"Daniel Jasiak"},{"ID":100,"Bezeichnung":"1 Stück Querträger Palette","Kategorie":"Produktion","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"07.08.2025","veranlasst durch":"Daniel Jasiak"},{"ID":101,"Bezeichnung":"1 Stück Kiste Werkzeuge GHA (Akimov)","Kategorie":"Produktion","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"07.08.2025","veranlasst durch":"Daniel Jasiak"},{"ID":102,"Bezeichnung":"1 Stück Bearbeitungsvorrichtung BJB OP 10","Kategorie":"Produktion","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"07.08.2025","veranlasst durch":"Daniel Jasiak"},{"ID":103,"Bezeichnung":"1 Stück Bearbeitungsvorrichtung BJB OP 20","Kategorie":"Produktion","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"07.08.2025","veranlasst durch":"Daniel Jasiak"},{"ID":104,"Bezeichnung":"1 Kiste Plastik ??","Kategorie":"Produktion","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"07.08.2025","veranlasst durch":"Daniel Jasiak"},{"ID":105,"Bezeichnung":"1 Hubwagen","Kategorie":"Produktion","Abteilung":"Produktion","Wiedervorlagen (12 Monate)":"07/01/26 00:00:00","Foto":"","Leasing / Eigentum":"","Verschrottung":"","eingelagert am":"07.08.2025","veranlasst durch":"Daniel Jasiak"}];
+
+// Color maps
+const katColors = {
+  'Vorrichtung':  {bg:'var(--accent-glow)',  border:'var(--accent)',  text:'var(--accent)'},
+  'Transport':    {bg:'var(--cyan-dim)',     border:'var(--cyan)',    text:'var(--cyan)'},
+  'Gestelle':     {bg:'var(--purple-dim)',   border:'var(--purple)',  text:'var(--purple)'},
+  'Anlage':       {bg:'var(--amber-dim)',    border:'var(--amber)',   text:'var(--amber)'},
+  'Produktion':   {bg:'var(--green-dim)',    border:'var(--green)',   text:'var(--green)'},
+};
+const abtColors = {
+  'Produktion':      {bg:'var(--accent-glow)',border:'var(--accent)',text:'var(--accent)'},
+  'Technik':         {bg:'var(--cyan-dim)',   border:'var(--cyan)',  text:'var(--cyan)'},
+  'Instandhaltung':  {bg:'var(--amber-dim)', border:'var(--amber)', text:'var(--amber)'},
+  'Logistik':        {bg:'var(--green-dim)', border:'var(--green)', text:'var(--green)'},
+};
+const defaultColor = {bg:'var(--surface2)',border:'var(--border)',text:'var(--text2)'};
+
+let sortCol = 'ID', sortDir = 'asc';
+let activeAbt = new Set(), activeKat = new Set();
+let showDataGaps = false;
+
+function init() {
+  renderStats();
+  buildFilters();
+  render();
+  document.getElementById('search').addEventListener('input', render);
+}
+
+function renderStats() {
+  const total = DATA.length;
+  const withFoto = DATA.filter(d => d.Foto).length;
+  const withEinlagerung = DATA.filter(d => d['eingelagert am']).length;
+  const withEigentum = DATA.filter(d => d['Leasing / Eigentum']).length;
+  const kategorien = new Set(DATA.map(d => d.Kategorie)).size;
+
+  document.getElementById('stats').innerHTML = `
+    <div class="stat-card"><div class="label">Gesamt</div><div class="value">${total}</div><div class="sub">Inventar-Positionen</div></div>
+    <div class="stat-card"><div class="label">Kategorien</div><div class="value">${kategorien}</div><div class="sub">verschiedene Typen</div></div>
+    <div class="stat-card"><div class="label">Foto vorhanden</div><div class="value">${withFoto}<span style="font-size:.85rem;color:var(--text3)">/${total}</span></div><div class="sub">${Math.round(withFoto/total*100)}% dokumentiert</div></div>
+    <div class="stat-card"><div class="label">Einlagerung erfasst</div><div class="value">${withEinlagerung}<span style="font-size:.85rem;color:var(--text3)">/${total}</span></div><div class="sub">${Math.round(withEinlagerung/total*100)}% gepflegt</div></div>
+    <div class="stat-card"><div class="label">Eigentum/Leasing</div><div class="value" style="color:var(--red)">${withEigentum}<span style="font-size:.85rem;color:var(--text3)">/${total}</span></div><div class="sub">0% gepflegt</div></div>
+  `;
+}
+
+function buildFilters() {
+  const abts = [...new Set(DATA.map(d=>d.Abteilung).filter(Boolean))].sort();
+  const kats = [...new Set(DATA.map(d=>d.Kategorie))].sort((a,b)=>{
+    const ca = DATA.filter(d=>d.Kategorie===a).length;
+    const cb = DATA.filter(d=>d.Kategorie===b).length;
+    return cb - ca;
+  }).slice(0, 10);
+
+  document.getElementById('abtFilters').innerHTML = abts.map(a =>
+    `<span class="chip" data-val="${a}" onclick="toggleChip(this,'abt')">${a} (${DATA.filter(d=>d.Abteilung===a).length})</span>`
+  ).join('');
+  document.getElementById('katFilters').innerHTML = kats.map(k =>
+    `<span class="chip" data-val="${k}" onclick="toggleChip(this,'kat')">${k} (${DATA.filter(d=>d.Kategorie===k).length})</span>`
+  ).join('');
+}
+
+function toggleChip(el, type) {
+  const val = el.dataset.val;
+  const set = type === 'abt' ? activeAbt : activeKat;
+  if (set.has(val)) { set.delete(val); el.classList.remove('active'); }
+  else { set.add(val); el.classList.add('active'); }
+  render();
+}
+
+function toggleFilter() {
+  const panel = document.getElementById('filterPanel');
+  const btn = document.getElementById('filterToggle');
+  panel.classList.toggle('open');
+  btn.classList.toggle('active');
+}
+
+function toggleDataQuality() {
+  showDataGaps = !showDataGaps;
+  document.getElementById('dataQualityBtn').classList.toggle('active');
+  render();
+}
+
+function getFiltered() {
+  const q = document.getElementById('search').value.toLowerCase().trim();
+  let data = [...DATA];
+
+  if (q) {
+    data = data.filter(d =>
+      d.Bezeichnung.toLowerCase().includes(q) ||
+      d.Kategorie.toLowerCase().includes(q) ||
+      (d.Abteilung||'').toLowerCase().includes(q) ||
+      String(d.ID).includes(q)
+    );
+  }
+  if (activeAbt.size) data = data.filter(d => activeAbt.has(d.Abteilung));
+  if (activeKat.size) data = data.filter(d => activeKat.has(d.Kategorie));
+  if (showDataGaps) {
+    data = data.filter(d => !d['Leasing / Eigentum'] || !d['eingelagert am'] || !d.Foto);
+  }
+
+  data.sort((a, b) => {
+    let va = a[sortCol], vb = b[sortCol];
+    if (sortCol === 'ID') { va = +va; vb = +vb; }
+    else { va = (va||'').toString().toLowerCase(); vb = (vb||'').toString().toLowerCase(); }
+    if (va < vb) return sortDir === 'asc' ? -1 : 1;
+    if (va > vb) return sortDir === 'asc' ? 1 : -1;
+    return 0;
+  });
+  return data;
+}
+
+function sortBy(col) {
+  if (sortCol === col) sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+  else { sortCol = col; sortDir = 'asc'; }
+  document.querySelectorAll('thead th').forEach(th => {
+    th.classList.toggle('sorted', th.dataset.col === col);
+    const icon = th.querySelector('.sort-icon');
+    if (icon) icon.textContent = (th.dataset.col === col && sortDir === 'desc') ? '▼' : '▲';
+  });
+  render();
+}
+
+function render() {
+  const data = getFiltered();
+  const tbody = document.getElementById('tbody');
+
+  if (!data.length) {
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><div class="icon">🔍</div><p>Keine Einträge gefunden</p></div></td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = data.map(d => {
+    const kc = katColors[d.Kategorie] || defaultColor;
+    const ac = abtColors[d.Abteilung] || defaultColor;
+    const hasFoto = !!d.Foto;
+    const hasEinl = !!d['eingelagert am'];
+    const hasEig = !!d['Leasing / Eigentum'];
+
+    return `<tr onclick="openDetail(${d.ID})" style="cursor:pointer">
+      <td class="id-cell">${String(d.ID).padStart(3,'0')}</td>
+      <td class="bezeichnung">${d.Bezeichnung}</td>
+      <td><span class="kat-badge" style="background:${kc.bg};border:1px solid ${kc.border};color:${kc.text}">${d.Kategorie}</span></td>
+      <td><span class="abt-badge" style="background:${ac.bg};border:1px solid ${ac.border};color:${ac.text}">${d.Abteilung || '—'}</span></td>
+      <td class="foto-indicator"><span class="status-dot ${hasFoto?'has':'missing'}">${hasFoto?'Ja':'—'}</span></td>
+      <td><span class="status-dot ${hasEinl?'has':'missing'}">${hasEinl? d['eingelagert am'] :'—'}</span></td>
+      <td><span class="status-dot ${hasEig?'has':'missing'}">${hasEig? d['Leasing / Eigentum'] :'—'}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function openDetail(id) {
+  const d = DATA.find(x => x.ID === id);
+  if (!d) return;
+  document.getElementById('modalTitle').textContent = `#${String(d.ID).padStart(3,'0')} — ${d.Bezeichnung}`;
+  const fields = [
+    ['Bezeichnung', d.Bezeichnung],
+    ['Kategorie', d.Kategorie],
+    ['Abteilung', d.Abteilung],
+    ['Wiedervorlage', d['Wiedervorlagen (12 Monate)']],
+    ['Foto-Pfad', d.Foto ? d.Foto.replace(/#/g,'') : ''],
+    ['Leasing / Eigentum', d['Leasing / Eigentum']],
+    ['Verschrottung', d.Verschrottung],
+    ['Eingelagert am', d['eingelagert am']],
+    ['Veranlasst durch', d['veranlasst durch']],
+  ];
+  document.getElementById('modalBody').innerHTML = fields.map(([label, val]) =>
+    `<div class="detail-row">
+      <div class="detail-label">${label}</div>
+      <div class="detail-value ${val?'':'empty'}">${val || 'nicht gepflegt'}</div>
+    </div>`
+  ).join('');
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('modal')) {
+    document.getElementById('modal').classList.remove('open');
+  }
+}
+
+function exportCSV() {
+  const data = getFiltered();
+  const headers = ['ID','Bezeichnung','Kategorie','Abteilung','Wiedervorlagen (12 Monate)','Foto','Leasing / Eigentum','Verschrottung','eingelagert am','veranlasst durch'];
+  const csvContent = [
+    headers.join(';'),
+    ...data.map(d => headers.map(h => `"${(d[h]||'').toString().replace(/"/g,'""')}"`).join(';'))
+  ].join('\n');
+
+  const blob = new Blob(['\uFEFF' + csvContent], {type:'text/csv;charset=utf-8;'});
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `Inventar_LZ_${new Date().toISOString().slice(0,10)}.csv`;
+  link.click();
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') document.getElementById('modal').classList.remove('open');
+});
+
+init();
+</script>
+</body>
+</html>
