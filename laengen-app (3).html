@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Längen-Umrechner Trainer</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1729;
+    --card: #1a2642;
+    --card-hover: #1f2f52;
+    --accent1: #00d4aa;
+    --accent2: #7c5cfc;
+    --accent3: #ff6b9d;
+    --accent4: #ffc145;
+    --text: #e8ecf4;
+    --text-dim: #8994a8;
+    --correct: #00d4aa;
+    --wrong: #ff4d6a;
+    --border: rgba(255,255,255,0.06);
+    --glow1: rgba(0,212,170,0.15);
+    --glow2: rgba(124,92,252,0.15);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Outfit', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Animated background */
+  body::before {
+    content: '';
+    position: fixed;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: 
+      radial-gradient(ellipse at 20% 50%, var(--glow2) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 20%, var(--glow1) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 80%, rgba(255,107,157,0.08) 0%, transparent 50%);
+    animation: bgFloat 20s ease-in-out infinite;
+    z-index: 0;
+  }
+
+  @keyframes bgFloat {
+    0%, 100% { transform: translate(0, 0) rotate(0deg); }
+    33% { transform: translate(2%, -2%) rotate(1deg); }
+    66% { transform: translate(-1%, 1%) rotate(-0.5deg); }
+  }
+
+  .app {
+    position: relative;
+    z-index: 1;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    min-height: 100vh;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    padding: 30px 0 20px;
+    animation: slideDown 0.6s ease-out;
+  }
+
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .header h1 {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 2rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--accent1), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 4px;
+  }
+
+  .header p {
+    color: var(--text-dim);
+    font-size: 0.95rem;
+  }
+
+  /* Stats bar */
+  .stats {
+    display: flex;
+    gap: 10px;
+    margin: 20px 0;
+    animation: slideUp 0.6s ease-out 0.1s both;
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .stat-card {
+    flex: 1;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 14px 10px;
+    text-align: center;
+    transition: transform 0.2s;
+  }
+
+  .stat-card:hover { transform: translateY(-2px); }
+
+  .stat-icon { font-size: 1.4rem; margin-bottom: 4px; }
+  .stat-value {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+  .stat-label {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .stat-card:nth-child(1) .stat-value { color: var(--accent2); }
+  .stat-card:nth-child(2) .stat-value { color: var(--correct); }
+  .stat-card:nth-child(3) .stat-value { color: var(--accent4); }
+
+  /* Streak flame */
+  .streak-flame {
+    display: inline-block;
+    animation: flicker 0.4s ease-in-out infinite alternate;
+  }
+  @keyframes flicker {
+    from { transform: scale(1) rotate(-3deg); }
+    to { transform: scale(1.15) rotate(3deg); }
+  }
+
+  /* Level / XP bar */
+  .level-bar {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    animation: slideUp 0.6s ease-out 0.15s both;
+  }
+
+  .level-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .level-badge {
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--accent4);
+  }
+
+  .level-xp {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+  }
+
+  .xp-track {
+    height: 8px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .xp-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent4), var(--accent3));
+    border-radius: 4px;
+    transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  /* Mode selector */
+  .mode-selector {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    animation: slideUp 0.6s ease-out 0.2s both;
+  }
+
+  .mode-btn {
+    flex: 1;
+    background: var(--card);
+    border: 2px solid var(--border);
+    border-radius: 14px;
+    padding: 12px 8px;
+    color: var(--text-dim);
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.25s;
+    text-align: center;
+  }
+
+  .mode-btn:hover { background: var(--card-hover); color: var(--text); }
+
+  .mode-btn.active {
+    border-color: var(--accent2);
+    color: var(--text);
+    background: rgba(124,92,252,0.12);
+    box-shadow: 0 0 20px rgba(124,92,252,0.15);
+  }
+
+  .mode-emoji { font-size: 1.3rem; display: block; margin-bottom: 4px; }
+
+  /* Difficulty */
+  .diff-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    animation: slideUp 0.6s ease-out 0.25s both;
+  }
+
+  .diff-btn {
+    flex: 1;
+    padding: 10px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--text-dim);
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.25s;
+    text-align: center;
+  }
+
+  .diff-btn:hover { background: var(--card-hover); }
+
+  .diff-btn.active {
+    border-color: var(--accent1);
+    color: var(--accent1);
+    background: rgba(0,212,170,0.08);
+  }
+
+  /* Question card */
+  .question-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 28px 24px;
+    margin-bottom: 20px;
+    animation: cardAppear 0.5s ease-out;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .question-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent1), var(--accent2), var(--accent3));
+  }
+
+  @keyframes cardAppear {
+    from { opacity: 0; transform: scale(0.95) translateY(10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  .question-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-dim);
+    margin-bottom: 16px;
+  }
+
+  .question-text {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 600;
+    line-height: 1.4;
+    margin-bottom: 8px;
+  }
+
+  .question-value {
+    color: var(--accent1);
+  }
+
+  .question-unit {
+    color: var(--accent3);
+  }
+
+  .question-target {
+    color: var(--accent4);
+  }
+
+  .hint-text {
+    font-size: 0.82rem;
+    color: var(--text-dim);
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 10px;
+    border-left: 3px solid var(--accent2);
+  }
+
+  /* Answer input */
+  .answer-area {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    align-items: center;
+  }
+
+  .answer-input {
+    flex: 1;
+    background: rgba(255,255,255,0.05);
+    border: 2px solid rgba(255,255,255,0.1);
+    border-radius: 14px;
+    padding: 14px 18px;
+    font-family: 'Fredoka', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.3s;
+  }
+
+  .answer-input:focus {
+    border-color: var(--accent2);
+    box-shadow: 0 0 20px rgba(124,92,252,0.15);
+  }
+
+  .answer-input::placeholder {
+    color: rgba(255,255,255,0.2);
+    font-weight: 400;
+  }
+
+  .answer-unit {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--accent4);
+    min-width: 35px;
+  }
+
+  .submit-btn {
+    background: linear-gradient(135deg, var(--accent2), var(--accent3));
+    border: none;
+    border-radius: 14px;
+    padding: 14px 24px;
+    color: white;
+    font-family: 'Fredoka', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s;
+    white-space: nowrap;
+  }
+
+  .submit-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 20px rgba(124,92,252,0.35);
+  }
+
+  .submit-btn:active { transform: scale(0.97); }
+
+  /* Feedback */
+  .feedback {
+    margin-top: 16px;
+    padding: 14px 18px;
+    border-radius: 14px;
+    font-weight: 500;
+    animation: feedbackPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  @keyframes feedbackPop {
+    from { opacity: 0; transform: scale(0.8); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  .feedback.correct {
+    background: rgba(0,212,170,0.12);
+    border: 1px solid rgba(0,212,170,0.3);
+    color: var(--correct);
+  }
+
+  .feedback.wrong {
+    background: rgba(255,77,106,0.12);
+    border: 1px solid rgba(255,77,106,0.3);
+    color: var(--wrong);
+  }
+
+  .feedback-emoji { font-size: 1.3rem; margin-right: 8px; }
+  .feedback-detail {
+    display: block;
+    margin-top: 6px;
+    font-size: 0.85rem;
+    opacity: 0.85;
+  }
+
+  /* Reference table */
+  .ref-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 18px;
+    margin-bottom: 20px;
+    animation: slideUp 0.6s ease-out 0.35s both;
+  }
+
+  .ref-title {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--accent2);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+  }
+
+  .ref-table {
+    display: none;
+  }
+
+  .ref-table.open { display: block; }
+
+  .ref-row {
+    display: flex;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.88rem;
+  }
+
+  .ref-row:last-child { border-bottom: none; }
+
+  .ref-from {
+    flex: 1;
+    font-weight: 500;
+  }
+
+  .ref-arrow {
+    color: var(--text-dim);
+    margin: 0 10px;
+    font-size: 0.8rem;
+  }
+
+  .ref-to {
+    flex: 1;
+    text-align: right;
+    color: var(--accent1);
+    font-weight: 600;
+    font-family: 'Fredoka', sans-serif;
+  }
+
+  /* Confetti canvas */
+  #confetti {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 100;
+  }
+
+  /* Responsive */
+  @media (max-width: 480px) {
+    .header h1 { font-size: 1.6rem; }
+    .question-text { font-size: 1.3rem; }
+    .answer-input { font-size: 1.1rem; padding: 12px 14px; }
+    .stats { gap: 6px; }
+    .stat-card { padding: 10px 6px; }
+    .stat-value { font-size: 1.2rem; }
+  }
+
+  /* Shake animation for wrong answer */
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-8px); }
+    40% { transform: translateX(8px); }
+    60% { transform: translateX(-5px); }
+    80% { transform: translateX(5px); }
+  }
+
+  .shake { animation: shake 0.4s ease-out; }
+
+  /* Pulse for correct */
+  @keyframes correctPulse {
+    0% { box-shadow: 0 0 0 0 rgba(0,212,170,0.4); }
+    70% { box-shadow: 0 0 0 15px rgba(0,212,170,0); }
+    100% { box-shadow: 0 0 0 0 rgba(0,212,170,0); }
+  }
+
+  .correct-pulse { animation: correctPulse 0.6s ease-out; }
+
+  /* Multi choice buttons */
+  .choices {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  .choice-btn {
+    background: rgba(255,255,255,0.04);
+    border: 2px solid rgba(255,255,255,0.1);
+    border-radius: 14px;
+    padding: 16px;
+    color: var(--text);
+    font-family: 'Fredoka', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s;
+    text-align: center;
+  }
+
+  .choice-btn:hover {
+    border-color: var(--accent2);
+    background: rgba(124,92,252,0.08);
+    transform: translateY(-2px);
+  }
+
+  .choice-btn.chosen-correct {
+    border-color: var(--correct);
+    background: rgba(0,212,170,0.15);
+    color: var(--correct);
+  }
+
+  .choice-btn.chosen-wrong {
+    border-color: var(--wrong);
+    background: rgba(255,77,106,0.15);
+    color: var(--wrong);
+  }
+
+  .choice-btn.reveal-correct {
+    border-color: var(--correct);
+    background: rgba(0,212,170,0.08);
+  }
+
+  .choice-btn:disabled { cursor: default; }
+  .choice-unit {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    font-weight: 400;
+    display: block;
+    margin-top: 2px;
+  }
+</style>
+</head>
+<body>
+
+<canvas id="confetti"></canvas>
+
+<div class="app">
+  <div class="header">
+    <h1>📏 Längen-Trainer</h1>
+    <p>km · m · dm · cm · mm</p>
+  </div>
+
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-icon">🎯</div>
+      <div class="stat-value" id="totalScore">0</div>
+      <div class="stat-label">Punkte</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">✅</div>
+      <div class="stat-value" id="correctCount">0</div>
+      <div class="stat-label">Richtig</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" id="streakIcon">🔥</div>
+      <div class="stat-value" id="streakCount">0</div>
+      <div class="stat-label">Serie</div>
+    </div>
+  </div>
+
+  <div class="level-bar">
+    <div class="level-info">
+      <span class="level-badge" id="levelBadge">⭐ Level 1 – Anfänger</span>
+      <span class="level-xp" id="levelXp">0 / 50 XP</span>
+    </div>
+    <div class="xp-track">
+      <div class="xp-fill" id="xpFill" style="width: 0%"></div>
+    </div>
+  </div>
+
+  <div class="mode-selector">
+    <button class="mode-btn active" id="modeInput">
+      <span class="mode-emoji">⌨️</span>Eingabe
+    </button>
+    <button class="mode-btn" id="modeChoice">
+      <span class="mode-emoji">🔘</span>Auswahl
+    </button>
+  </div>
+
+  <div class="diff-row">
+    <button class="diff-btn active" id="diffEasy">🟢 Leicht</button>
+    <button class="diff-btn" id="diffMedium">🟡 Mittel</button>
+    <button class="diff-btn" id="diffHard">🔴 Schwer</button>
+  </div>
+
+  <div class="question-card" id="questionCard">
+    <div class="question-label">Aufgabe</div>
+    <div class="question-text" id="questionText"></div>
+    <div class="hint-text" id="hintText"></div>
+    <div id="answerArea"></div>
+    <div id="feedbackArea"></div>
+  </div>
+
+  <div class="ref-card">
+    <div class="ref-title" id="refToggle">
+      📐 Umrechnungstabelle <span id="refArrow">▸</span>
+    </div>
+    <div class="ref-table" id="refTable">
+      <div class="ref-row"><span class="ref-from">1 km</span><span class="ref-arrow">＝</span><span class="ref-to">1.000 m</span></div>
+      <div class="ref-row"><span class="ref-from">1 m</span><span class="ref-arrow">＝</span><span class="ref-to">10 dm</span></div>
+      <div class="ref-row"><span class="ref-from">1 m</span><span class="ref-arrow">＝</span><span class="ref-to">100 cm</span></div>
+      <div class="ref-row"><span class="ref-from">1 m</span><span class="ref-arrow">＝</span><span class="ref-to">1.000 mm</span></div>
+      <div class="ref-row"><span class="ref-from">1 dm</span><span class="ref-arrow">＝</span><span class="ref-to">10 cm</span></div>
+      <div class="ref-row"><span class="ref-from">1 cm</span><span class="ref-arrow">＝</span><span class="ref-to">10 mm</span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const UNITS = ['km','m','dm','cm','mm'];
+const FACTORS = { km: 1e6, m: 1e3, dm: 1e2, cm: 10, mm: 1 }; // all relative to mm
+
+const LEVELS = [
+  { name: 'Anfänger', xp: 0 },
+  { name: 'Einsteiger', xp: 50 },
+  { name: 'Kenner', xp: 150 },
+  { name: 'Profi', xp: 350 },
+  { name: 'Experte', xp: 600 },
+  { name: 'Meister', xp: 1000 },
+  { name: 'Großmeister', xp: 1500 },
+  { name: 'Legende', xp: 2500 },
+];
+
+let state = {
+  mode: 'input',
+  diff: 'easy',
+  score: 0,
+  correct: 0,
+  total: 0,
+  streak: 0,
+  bestStreak: 0,
+  xp: 0,
+  currentQ: null,
+  answered: false
+};
+
+function convert(value, from, to) {
+  const inMm = value * FACTORS[from];
+  return inMm / FACTORS[to];
+}
+
+function genQuestion() {
+  const { diff } = state;
+  let pairs, values;
+
+  if (diff === 'easy') {
+    // Adjacent units, nice numbers
+    pairs = [['m','cm'],['cm','mm'],['m','mm'],['dm','cm'],['m','dm'],['km','m']];
+    values = [1, 2, 3, 5, 10, 20, 50, 100];
+  } else if (diff === 'medium') {
+    pairs = [['m','cm'],['cm','mm'],['m','mm'],['km','m'],['dm','mm'],['km','cm'],['m','dm'],['cm','m'],['mm','cm'],['mm','m']];
+    values = [0.5, 1, 2, 3, 4, 5, 7, 10, 15, 25, 50, 100, 250, 500];
+  } else {
+    pairs = [];
+    for (let a of UNITS) for (let b of UNITS) if (a !== b) pairs.push([a,b]);
+    values = [0.1, 0.25, 0.5, 1, 2, 2.5, 3, 4.5, 5, 7.5, 10, 12, 15, 25, 33, 50, 75, 100, 250, 1000];
+  }
+
+  const [from, to] = pairs[Math.floor(Math.random() * pairs.length)];
+  const value = values[Math.floor(Math.random() * values.length)];
+  const answer = convert(value, from, to);
+
+  return { value, from, to, answer };
+}
+
+function formatNum(n) {
+  if (n === Math.floor(n)) return n.toLocaleString('de-DE');
+  // Up to 4 decimal places
+  const s = parseFloat(n.toFixed(4));
+  return s.toLocaleString('de-DE');
+}
+
+function getHint(from, to) {
+  const f = FACTORS[from];
+  const t = FACTORS[to];
+  const ratio = f / t;
+  if (ratio > 1) {
+    return `💡 1 ${from} = ${formatNum(ratio)} ${to} (× ${formatNum(ratio)})`;
+  } else {
+    return `💡 1 ${from} = ${formatNum(ratio)} ${to} (÷ ${formatNum(1/ratio)})`;
+  }
+}
+
+function renderQuestion() {
+  const q = genQuestion();
+  state.currentQ = q;
+  state.answered = false;
+
+  const card = document.getElementById('questionCard');
+  card.classList.remove('shake','correct-pulse');
+
+  document.getElementById('questionText').innerHTML =
+    `<span class="question-value">${formatNum(q.value)}</span> <span class="question-unit">${q.from}</span> = ? <span class="question-target">${q.to}</span>`;
+
+  document.getElementById('hintText').textContent = getHint(q.from, q.to);
+  document.getElementById('feedbackArea').innerHTML = '';
+
+  if (state.mode === 'input') {
+    document.getElementById('answerArea').innerHTML = `
+      <div class="answer-area">
+        <input class="answer-input" id="answerInput" type="text" inputmode="decimal"
+               placeholder="Antwort" autocomplete="off">
+        <span class="answer-unit">${q.to}</span>
+        <button class="submit-btn" id="submitBtn">OK</button>
+      </div>`;
+    const inp = document.getElementById('answerInput');
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter') checkAnswer(); });
+    document.getElementById('submitBtn').addEventListener('click', checkAnswer);
+    setTimeout(() => inp.focus(), 100);
+  } else {
+    renderChoices(q);
+  }
+}
+
+function renderChoices(q) {
+  const correct = q.answer;
+  let options = new Set();
+  options.add(correct);
+
+  // Generate plausible wrong answers
+  const multipliers = [0.1, 0.01, 10, 100, 0.5, 2, 5, 0.001, 1000];
+  while (options.size < 4) {
+    const m = multipliers[Math.floor(Math.random() * multipliers.length)];
+    const wrong = correct * m;
+    if (wrong !== correct && wrong > 0 && wrong < 1e9) {
+      options.add(wrong);
+    }
+    // Safety
+    if (options.size < 4) {
+      options.add(correct + Math.floor(Math.random()*10) + 1);
+    }
+  }
+
+  let arr = [...options].sort(() => Math.random() - 0.5);
+
+  document.getElementById('answerArea').innerHTML = `
+    <div class="choices">
+      ${arr.map((v,i) => `
+        <button class="choice-btn" data-val="${v}">
+          ${formatNum(v)}
+          <span class="choice-unit">${q.to}</span>
+        </button>
+      `).join('')}
+    </div>`;
+
+  document.querySelectorAll('.choice-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      checkChoice(this, parseFloat(this.dataset.val));
+    });
+  });
+}
+
+function parseInput(str) {
+  // Accept comma or dot as decimal
+  const cleaned = str.trim().replace(/\./g, '').replace(',', '.');
+  // Also accept plain number with dot as decimal
+  if (isNaN(cleaned)) {
+    const alt = str.trim().replace(',', '.');
+    return parseFloat(alt);
+  }
+  return parseFloat(cleaned);
+}
+
+function checkAnswer() {
+  if (state.answered) { renderQuestion(); return; }
+
+  const inp = document.getElementById('answerInput');
+  const userVal = parseInput(inp.value);
+  if (isNaN(userVal)) { inp.classList.add('shake'); setTimeout(() => inp.classList.remove('shake'), 400); return; }
+
+  const q = state.currentQ;
+  const tolerance = q.answer * 0.001; // 0.1% tolerance for rounding
+  const isCorrect = Math.abs(userVal - q.answer) <= Math.max(tolerance, 0.001);
+
+  showFeedback(isCorrect, q);
+}
+
+function checkChoice(btn, value) {
+  if (state.answered) return;
+  const q = state.currentQ;
+  const isCorrect = Math.abs(value - q.answer) < 0.001;
+
+  // Highlight buttons
+  document.querySelectorAll('.choice-btn').forEach(b => {
+    b.disabled = true;
+    const v = parseFloat(b.dataset.val);
+    if (Math.abs(v - q.answer) < 0.001) {
+      b.classList.add(isCorrect && b === btn ? 'chosen-correct' : 'reveal-correct');
+    }
+  });
+  if (!isCorrect) btn.classList.add('chosen-wrong');
+
+  showFeedback(isCorrect, q);
+}
+
+function showFeedback(isCorrect, q) {
+  state.answered = true;
+  state.total++;
+  const card = document.getElementById('questionCard');
+
+  const xpGain = isCorrect ? (state.diff === 'easy' ? 5 : state.diff === 'medium' ? 10 : 20) : 0;
+  const streakBonus = isCorrect && state.streak >= 3 ? Math.min(state.streak, 10) : 0;
+
+  if (isCorrect) {
+    state.correct++;
+    state.streak++;
+    if (state.streak > state.bestStreak) state.bestStreak = state.streak;
+    state.score += (state.diff === 'easy' ? 10 : state.diff === 'medium' ? 25 : 50) + state.streak * 2;
+    state.xp += xpGain + streakBonus;
+    card.classList.add('correct-pulse');
+    if (state.streak >= 5) spawnConfetti();
+  } else {
+    state.streak = 0;
+    card.classList.add('shake');
+  }
+
+  updateStats();
+
+  const fb = document.getElementById('feedbackArea');
+  const correctMsgs = ['Super! 🎉','Perfekt! 💪','Richtig! ⭐','Genau! 🏆','Klasse! 🌟'];
+  const wrongMsgs = ['Nicht ganz 😅','Knapp daneben 🤔','Versuchs nochmal! 💪'];
+
+  const emoji = isCorrect ? '✅' : '❌';
+  const msg = isCorrect
+    ? correctMsgs[Math.floor(Math.random()*correctMsgs.length)]
+    : wrongMsgs[Math.floor(Math.random()*wrongMsgs.length)];
+
+  let detail = '';
+  if (!isCorrect) {
+    detail = `<span class="feedback-detail">Richtige Antwort: ${formatNum(q.answer)} ${q.to}</span>`;
+  } else if (streakBonus > 0) {
+    detail = `<span class="feedback-detail">+${xpGain} XP + ${streakBonus} Serienbonus!</span>`;
+  } else {
+    detail = `<span class="feedback-detail">+${xpGain} XP</span>`;
+  }
+
+  fb.innerHTML = `
+    <div class="feedback ${isCorrect ? 'correct' : 'wrong'}">
+      <span class="feedback-emoji">${emoji}</span>${msg}
+      ${detail}
+    </div>`;
+
+  // Auto-next after delay
+  setTimeout(() => {
+    if (state.answered) renderQuestion();
+  }, isCorrect ? 1500 : 2500);
+}
+
+function updateStats() {
+  document.getElementById('totalScore').textContent = state.score;
+  document.getElementById('correctCount').textContent = state.correct;
+  document.getElementById('streakCount').textContent = state.streak;
+
+  const icon = document.getElementById('streakIcon');
+  if (state.streak >= 5) {
+    icon.innerHTML = `<span class="streak-flame">🔥</span>`;
+  } else {
+    icon.innerHTML = '🔥';
+  }
+
+  // Level
+  let lvl = 0;
+  for (let i = LEVELS.length - 1; i >= 0; i--) {
+    if (state.xp >= LEVELS[i].xp) { lvl = i; break; }
+  }
+  const current = LEVELS[lvl];
+  const next = LEVELS[lvl + 1] || { xp: current.xp + 500 };
+  const progress = ((state.xp - current.xp) / (next.xp - current.xp)) * 100;
+
+  document.getElementById('levelBadge').textContent = `⭐ Level ${lvl + 1} – ${current.name}`;
+  document.getElementById('levelXp').textContent = `${state.xp} / ${next.xp} XP`;
+  document.getElementById('xpFill').style.width = Math.min(progress, 100) + '%';
+}
+
+function setMode(m) {
+  state.mode = m;
+  document.getElementById('modeInput').classList.toggle('active', m === 'input');
+  document.getElementById('modeChoice').classList.toggle('active', m === 'choice');
+  renderQuestion();
+}
+
+function setDiff(d) {
+  state.diff = d;
+  document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('diff' + d.charAt(0).toUpperCase() + d.slice(1)).classList.add('active');
+  renderQuestion();
+}
+
+function toggleRef() {
+  const t = document.getElementById('refTable');
+  const a = document.getElementById('refArrow');
+  t.classList.toggle('open');
+  a.textContent = t.classList.contains('open') ? '▾' : '▸';
+}
+
+// Confetti
+function spawnConfetti() {
+  const canvas = document.getElementById('confetti');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const particles = [];
+  const colors = ['#00d4aa','#7c5cfc','#ff6b9d','#ffc145','#00bfff'];
+
+  for (let i = 0; i < 60; i++) {
+    particles.push({
+      x: canvas.width / 2 + (Math.random()-0.5) * 200,
+      y: canvas.height / 2,
+      vx: (Math.random()-0.5) * 12,
+      vy: -Math.random() * 15 - 5,
+      size: Math.random() * 8 + 4,
+      color: colors[Math.floor(Math.random()*colors.length)],
+      rotation: Math.random() * 360,
+      rotSpeed: (Math.random()-0.5) * 10,
+      life: 1
+    });
+  }
+
+  let frame = 0;
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    let alive = false;
+
+    particles.forEach(p => {
+      if (p.life <= 0) return;
+      alive = true;
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.4;
+      p.vx *= 0.99;
+      p.rotation += p.rotSpeed;
+      p.life -= 0.012;
+
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rotation * Math.PI / 180);
+      ctx.globalAlpha = p.life;
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size * 0.6);
+      ctx.restore();
+    });
+
+    if (alive && frame < 120) {
+      frame++;
+      requestAnimationFrame(animate);
+    } else {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+  }
+  animate();
+}
+
+// Init - all event listeners
+document.getElementById('modeInput').addEventListener('click', () => setMode('input'));
+document.getElementById('modeChoice').addEventListener('click', () => setMode('choice'));
+document.getElementById('diffEasy').addEventListener('click', () => setDiff('easy'));
+document.getElementById('diffMedium').addEventListener('click', () => setDiff('medium'));
+document.getElementById('diffHard').addEventListener('click', () => setDiff('hard'));
+document.getElementById('refToggle').addEventListener('click', toggleRef);
+renderQuestion();
+</script>
+</body>
+</html>
